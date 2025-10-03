@@ -1,4 +1,17 @@
-import type { ButtonInteraction, CacheType, ChannelSelectMenuInteraction, MentionableSelectMenuInteraction, MessageComponentInteraction, ModalMessageModalSubmitInteraction, ModalSubmitInteraction, RoleSelectMenuInteraction, StringSelectMenuInteraction, UserSelectMenuInteraction } from "discord.js";
+import type { 
+    ButtonInteraction,
+    CacheType,
+    ChannelSelectMenuInteraction,
+    MentionableSelectMenuInteraction,
+    MessageComponentInteraction,
+    ModalMessageModalSubmitInteraction,
+    ModalSubmitInteraction,
+    RoleSelectMenuInteraction,
+    StringSelectMenuInteraction,
+    UserSelectMenuInteraction
+} from "discord.js";
+
+/* -------------------- UTILS -------------------- */
 
 export type CheckRoute<R> =
     R extends `${string}/` ? "Custom ID must not end with a slash" :
@@ -21,9 +34,7 @@ export type GetParams<Route> =
 
 type Params<P> = { [K in GetParams<P>]: string } & {};
 
-type Prettify<T> = {
-    [K in keyof T]: T[K]
-} & {}
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
 type NotEmptyArray<T> = T extends never[] ? never : T;
 
@@ -31,28 +42,20 @@ type NotEmptyArray<T> = T extends never[] ? never : T;
 type UniqueArray<T> =
     T extends readonly [infer X, ...infer Rest]
     ? InArray<Rest, X> extends true
-    ? ["Encountered value with duplicates:", X]
-    : readonly [X, ...UniqueArray<Rest>]
-    : T
+        ? ["Encountered value with duplicates:", X]
+        : readonly [X, ...UniqueArray<Rest>]
+    : T;
 
 type InArray<T, X> =
-    T extends readonly [X, ...infer _Rest] ? true : 
-    T extends readonly [X] ? true : 
+    T extends readonly [X, ...infer _Rest] ? true :
+    T extends readonly [X] ? true :
     T extends readonly [infer _, ...infer Rest] 
         ? InArray<Rest, X>
-        : false
+        : false;
 
-export type ResponderInteraction<Type extends ResponderType, Cache extends CacheType> = {
-    [ResponderType.Button]: ButtonInteraction<Cache>,
-    [ResponderType.StringSelect]: StringSelectMenuInteraction<Cache>,
-    [ResponderType.UserSelect]: UserSelectMenuInteraction<Cache>,
-    [ResponderType.RoleSelect]: RoleSelectMenuInteraction<Cache>,
-    [ResponderType.ChannelSelect]: ChannelSelectMenuInteraction<Cache>,
-    [ResponderType.MentionableSelect]: MentionableSelectMenuInteraction<Cache>,
-    [ResponderType.Modal]: ModalSubmitInteraction<Cache>,
-    [ResponderType.ModalComponent]: ModalMessageModalSubmitInteraction<Cache>,
-}[Type]
+/* -------------------- RESPONDER TYPES -------------------- */
 
+// Enum dos tipos de responder
 export enum ResponderType {
     Button = "button",
     StringSelect = "select.string",
@@ -66,11 +69,29 @@ export enum ResponderType {
     ButtonBuilder = "ButtonBuilder",
 }
 
+// Mapeamento seguro de cada ResponderType para interação correspondente
+type ResponderMap<Cache extends CacheType> = {
+    [ResponderType.Button]: ButtonInteraction<Cache>;
+    [ResponderType.StringSelect]: StringSelectMenuInteraction<Cache>;
+    [ResponderType.UserSelect]: UserSelectMenuInteraction<Cache>;
+    [ResponderType.RoleSelect]: RoleSelectMenuInteraction<Cache>;
+    [ResponderType.ChannelSelect]: ChannelSelectMenuInteraction<Cache>;
+    [ResponderType.MentionableSelect]: MentionableSelectMenuInteraction<Cache>;
+    [ResponderType.Modal]: ModalSubmitInteraction<Cache>;
+    [ResponderType.ModalComponent]: ModalMessageModalSubmitInteraction<Cache>;
+};
+
+// Tipo genérico seguro
+export type ResponderInteraction<
+    T extends ResponderType,
+    Cache extends CacheType = CacheType
+> = T extends keyof ResponderMap<Cache> ? ResponderMap<Cache>[T] : never;
+
 type ResolveParams<Path, Parsed> = Prettify<
-    Parsed extends { [x: string | number | symbol]: any }
-    ? Parsed
-    : Params<Path>
+    Parsed extends { [x: string | number | symbol]: any } ? Parsed : Params<Path>
 >;
+
+/* -------------------- RESPONDER DATA -------------------- */
 
 export interface ResponderData<
     Path extends string,
@@ -78,16 +99,23 @@ export interface ResponderData<
     out Parsed,
     Cache extends CacheType
 > {
-    customId: CheckRoute<Path>,
-    types: NotEmptyArray<UniqueArray<Types>>,
+    customId: CheckRoute<Path>;
+    types: NotEmptyArray<UniqueArray<Types>>;
     cache?: Cache;
     parse?(this: void, params: Params<Path>): Parsed;
-    run(this: void, interaction: ResponderInteraction<Types[number], Cache>, params: ResolveParams<Path, Parsed>): Promise<void>;
+    run(
+        this: void,
+        interaction: ResponderInteraction<Types[number], Cache>,
+        params: ResolveParams<Path, Parsed>
+    ): Promise<void>;
 }
+
+/* -------------------- GENERICS -------------------- */
 
 export type GenericResponderData = ResponderData<
     string, readonly ResponderType[], any, CacheType
 >;
+
 export type GenericResponderInteraction =
     | MessageComponentInteraction<CacheType>
     | ModalSubmitInteraction<CacheType>;
