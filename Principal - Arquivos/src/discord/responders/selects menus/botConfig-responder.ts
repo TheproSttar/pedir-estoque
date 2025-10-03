@@ -1,5 +1,5 @@
 import { createResponder, ResponderType } from "#base";
-import { ActionRowBuilder, ChannelSelectMenuBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, EmbedBuilder, RoleSelectMenuBuilder } from "discord.js";
 
 createResponder({
     customId: "solicitar-estoque-botconfig",
@@ -36,5 +36,48 @@ createResponder({
                 components: [row],
             });
         }
+
+        if (customId === "cargo-adm") {
+            const selectmenu = new RoleSelectMenuBuilder()
+            .setCustomId("selecionar-cargo")
+            .setPlaceholder("Selecione o cargo de equipe")
+            .setMinValues(1)
+            .setMaxValues(1)
+
+            const roleRow = new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(selectmenu)
+
+            await interaction.update({ content: "Selecione o cargo da equipe", components: [roleRow], embeds: [] });
+        }
+
+        if (customId === "alterar-bot") {
+            const embed = new EmbedBuilder()
+            .setTitle("**Configurar Bot**")
+            .setDescription("** *Altere o nome do bot, ou a logo* **")
+            .setColor("Aqua")
+            .setFields([
+                { name: "Ping", value: ` \`${interaction.client.ws.ping}\` `, inline: true },
+                { name: "Versão", value: "\`1.0\`**Beta**", inline: true }
+            ]);
+
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder()
+                .setLabel("Bot nome")
+                .setCustomId("alterar-nome-bot")
+                .setEmoji("1422673272390291556")
+                .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                .setLabel("Bot Logo")
+                .setCustomId("alterar-logo-bot")
+                .setEmoji("1422673272390291556")
+                .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                .setCustomId("voltar-início")
+                .setEmoji("1423641406974722048")
+                .setStyle(ButtonStyle.Secondary)
+            )
+
+            await interaction.update({ embeds: [embed], components: [row] });
+        }
+
     }
 });
